@@ -399,20 +399,20 @@ dialog.lb img{object-fit:contain; transition:filter .45s var(--ease)}
 /* ---------- Intro de las tarjetas de escenario ---------- */
 .scenario__intro{color:var(--on-dark-s); font-size:.95rem; line-height:1.5; margin:10px 0 18px}
 
-/* ---------- Agendador de visita (en el formulario) ---------- */
+/* ---------- Agendador de visita (en el formulario, selección múltiple) ---------- */
 .agenda-pick{margin:4px 0 2px}
-.agenda-pick__label{display:block; font-size:.88rem; font-weight:600; margin-bottom:8px}
-.agenda-pick__label span{color:var(--ink-soft); font-weight:400}
-.agenda-days{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px}
-.agenda-days .agenda-chip{flex:0 1 auto; padding-inline:14px}
-.agenda-pick__rows{display:flex; gap:14px; flex-wrap:wrap}
-.agenda-seg{display:flex; gap:8px; flex:1; min-width:180px}
-.agenda-chip{position:relative; flex:1; text-align:center; font-size:.86rem; font-weight:500; padding:11px 8px; min-height:44px; display:flex; align-items:center; justify-content:center; border:1.5px solid var(--line); border-radius:var(--r-sm); cursor:pointer; transition:border-color .18s var(--ease), background .18s var(--ease)}
+.agenda-pick__label{display:block; font-size:.88rem; font-weight:600; margin-bottom:14px}
+.agenda-pick__label span{color:var(--ink-soft); font-weight:400; font-size:.92em}
+.agenda-group{margin-bottom:14px}
+.agenda-group:last-child{margin-bottom:0}
+.agenda-group__label{display:block; font-size:.78rem; font-weight:600; color:var(--ink-soft); margin-bottom:8px}
+.agenda-days,.agenda-seg{display:flex; gap:8px; flex-wrap:wrap}
+.agenda-chip{position:relative; flex:0 1 auto; text-align:center; font-size:.86rem; font-weight:500; padding:10px 16px; min-height:44px; display:inline-flex; align-items:center; justify-content:center; gap:7px; border:1.5px solid var(--line); border-radius:var(--r-sm); cursor:pointer; transition:border-color .18s var(--ease), background .18s var(--ease)}
 .agenda-chip input{position:absolute; opacity:0; width:0; height:0}
 .agenda-chip:hover{border-color:var(--brand)}
-.agenda-chip.sel{border-color:var(--accent); background:oklch(0.760 0.14 64 / .1); color:var(--brand-ink); font-weight:600}
+.agenda-chip.sel{border-color:var(--accent); background:oklch(0.760 0.14 64 / .12); color:var(--brand-ink); font-weight:600}
+.agenda-chip.sel::before{content:"✓"; font-weight:700; color:var(--brand-ink); font-size:.85em}
 .agenda-chip:focus-within{outline:2px solid var(--brand); outline-offset:1px}
-@media (max-width:480px){ .agenda-pick__rows{flex-direction:column; gap:10px} }
 
 /* ---------- Meta del formulario ---------- */
 .form__meta{font-size:.82rem; color:var(--ink-soft); margin:-10px 0 16px}
@@ -817,17 +817,24 @@ dialog.lb img{object-fit:contain; transition:filter .45s var(--ease)}
               <label>No completar este campo<input type="text" name="website" tabindex="-1" autocomplete="off"></label>
             </div>
             <div class="agenda-pick">
-              <label class="agenda-pick__label">¿Qué día te acomoda? <span>(opcional)</span></label>
-              <div class="agenda-days" id="agendaDays" role="radiogroup" aria-label="Día preferido para la visita"></div>
-              <div class="agenda-pick__rows">
-                <div class="agenda-seg" role="radiogroup" aria-label="Franja horaria">
-                  <label class="agenda-chip"><input type="radio" name="franja" value="Mañana"> Mañana</label>
-                  <label class="agenda-chip"><input type="radio" name="franja" value="Tarde"> Tarde</label>
-                  <label class="agenda-chip sel"><input type="radio" name="franja" value="A convenir" checked> A convenir</label>
+              <p class="agenda-pick__label">¿Cuándo te acomoda la visita? <span>(opcional · marca todas las que quieras)</span></p>
+              <div class="agenda-group">
+                <span class="agenda-group__label">Días</span>
+                <div class="agenda-days" id="agendaDays" role="group" aria-label="Días preferidos para la visita"></div>
+              </div>
+              <div class="agenda-group">
+                <span class="agenda-group__label">Horario</span>
+                <div class="agenda-seg" role="group" aria-label="Horario preferido">
+                  <label class="agenda-chip"><input type="checkbox" name="franja" value="Mañana"> Mañana</label>
+                  <label class="agenda-chip"><input type="checkbox" name="franja" value="Tarde"> Tarde</label>
+                  <label class="agenda-chip"><input type="checkbox" name="franja" value="A convenir"> A convenir</label>
                 </div>
-                <div class="agenda-seg" role="radiogroup" aria-label="Modalidad de la visita">
-                  <label class="agenda-chip sel"><input type="radio" name="modalidad" value="Presencial" checked> Presencial</label>
-                  <label class="agenda-chip"><input type="radio" name="modalidad" value="Videollamada"> Videollamada</label>
+              </div>
+              <div class="agenda-group">
+                <span class="agenda-group__label">Modalidad</span>
+                <div class="agenda-seg" role="group" aria-label="Modalidad de la visita">
+                  <label class="agenda-chip"><input type="checkbox" name="modalidad" value="Presencial"> Presencial</label>
+                  <label class="agenda-chip"><input type="checkbox" name="modalidad" value="Videollamada"> Videollamada</label>
                 </div>
               </div>
             </div>
@@ -1042,16 +1049,20 @@ form.addEventListener('submit', (e)=>{
   e.preventDefault();
   if(leadSubmitted) return;                                   // anti-doble-envío
   if(!stepValid(2)) return;
-  const data=Object.fromEntries(new FormData(form).entries());
+  const fd=new FormData(form);
+  const data=Object.fromEntries(fd.entries());
   // --- Medidas de seguridad anti-bot ---
   if((data.website||'').trim()!==''){ return; }               // honeypot lleno = bot, se descarta en silencio
   if(Date.now()-formLoadedAt < 1500){ return; }               // enviado demasiado rápido = bot
   leadSubmitted=true;
   const submitBtn=form.querySelector('button[type="submit"]'); if(submitBtn) submitBtn.disabled=true;
-  // Preferencia de visita (todo opcional, con valores por defecto)
-  const visita = data.dia
-    ? `${data.dia} en la ${(data.franja||'tarde').toLowerCase()}, ${(data.modalidad||'presencial').toLowerCase()}`
-    : `${(data.franja||'a convenir')}, ${(data.modalidad||'presencial').toLowerCase()}`;
+  // Preferencia de visita (selección múltiple, todo opcional)
+  const dias=fd.getAll('dia'), franjas=fd.getAll('franja'), modos=fd.getAll('modalidad');
+  const visitaParts=[];
+  if(dias.length) visitaParts.push(dias.join(', '));
+  if(franjas.length) visitaParts.push(franjas.join(' o '));
+  if(modos.length) visitaParts.push(modos.join(' o '));
+  const visita = visitaParts.length ? visitaParts.join(' · ') : 'a convenir';
   // Mensaje de WhatsApp con todo el contexto del lead (codificado correctamente)
   const waText=`Hola, soy ${data.nombre}. Vi el departamento de Cerro Barón (UF 3.800).\n\nObjetivo: ${data.objetivo}\nForma de pago: ${data.pago}\nVisita preferida: ${visita}\nQuiero coordinar una visita.`;
   const waUrl=`https://wa.me/${CONFIG.whatsappNumber}?text=${encodeURIComponent(waText)}`;
@@ -1064,7 +1075,7 @@ form.addEventListener('submit', (e)=>{
       method:'POST', keepalive:true, headers:{'Content-Type':'application/json'},
       body:JSON.stringify({access_key:CONFIG.web3formsKey, subject:'Nuevo lead · Depto Cerro Barón',
         objetivo:data.objetivo, pago:data.pago, nombre:data.nombre, whatsapp:data.fono, email:data.email,
-        dia:data.dia||'', franja:data.franja||'', modalidad:data.modalidad||''})
+        dia:dias.join(', '), franja:franjas.join(', '), modalidad:modos.join(', ')})
     }).catch(()=>{});
   }
   // 3) Limpiar el borrador guardado y mostrar paso de éxito (con botón de respaldo)
@@ -1100,22 +1111,22 @@ form.addEventListener('submit', (e)=>{
     d.setDate(d.getDate()+1); guard++;
   }
   const today=new Date(); today.setHours(0,0,0,0);
-  const fmt=new Intl.DateTimeFormat('es-CL',{weekday:'short', day:'numeric'});
+  const fmt=new Intl.DateTimeFormat('es-CL',{weekday:'long'});  // solo el nombre del día, sin fecha
   const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
   dias.forEach((fecha)=>{
     const dd=new Date(fecha); dd.setHours(0,0,0,0);
     const diff=Math.round((dd-today)/86400000);
     const label = diff===0 ? 'Hoy' : diff===1 ? 'Mañana' : cap(fmt.format(fecha));
     const lab=document.createElement('label'); lab.className='agenda-chip';
-    lab.innerHTML='<input type="radio" name="dia" value="'+label+'"> '+label;
+    lab.innerHTML='<input type="checkbox" name="dia" value="'+label+'"> '+label;
     wrap.appendChild(lab);
   });
 })();
 
-/* ---------- Selección visual de chips (agendador) ---------- */
+/* ---------- Selección visual de chips (agendador, selección múltiple) ---------- */
 form.addEventListener('change',(e)=>{
   const chip=e.target.closest('.agenda-chip');
-  if(chip){ chip.parentElement.querySelectorAll('.agenda-chip').forEach(c=>c.classList.remove('sel')); chip.classList.add('sel'); }
+  if(chip){ chip.classList.toggle('sel', e.target.checked); }
 });
 
 /* ---------- Persistencia y recuperación del formulario (sessionStorage) ---------- */
@@ -1128,7 +1139,7 @@ form.addEventListener('change',(e)=>{
   if(!saved) return;
   Object.entries(saved).forEach(([k,v])=>{
     form.querySelectorAll('[name="'+k+'"]').forEach(el=>{
-      if(el.type==='radio'){ if(el.value===v){ el.checked=true; el.dispatchEvent(new Event('change',{bubbles:true})); } }
+      if(el.type==='radio' || el.type==='checkbox'){ if(el.value===v){ el.checked=true; el.dispatchEvent(new Event('change',{bubbles:true})); } }
       else if(el.type!=='submit' && el.type!=='button'){ el.value=v; }
     });
   });
