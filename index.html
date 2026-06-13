@@ -25,6 +25,68 @@
 <link rel="canonical" href="https://horizonte-baron-landing.vercel.app/" />
 <meta name="theme-color" content="#1d2b3a" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231d2b3a'/%3E%3Ccircle cx='16' cy='15' r='6.5' fill='%23e8a24a'/%3E%3Crect y='19' width='32' height='13' fill='%233a7a90'/%3E%3C/svg%3E" />
+<meta name="robots" content="index, follow" />
+
+<!-- ============================================================
+     GOOGLE SEARCH CONSOLE  (funciona aunque estés en Vercel)
+     Pasos: en search.google.com/search-console agrega una propiedad
+     tipo "Prefijo de URL" con https://horizonte-baron-landing.vercel.app/
+     Elige el método "Etiqueta HTML", copia la etiqueta que te dan y
+     pégala JUSTO ABAJO de esta línea. Luego haz git push (redeploy) y
+     vuelve a Search Console a pulsar "Verificar".
+     <meta name="google-site-verification" content="PEGA_AQUI_TU_CODIGO" />
+     ============================================================ -->
+
+<!-- Datos estructurados (schema.org): Google entiende que es una propiedad en venta -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Apartment",
+      "@id": "https://horizonte-baron-landing.vercel.app/#departamento",
+      "name": "Departamento amoblado con vista al mar en Cerro Barón, Valparaíso",
+      "description": "Departamento 2D/1B de 53 m² útiles más terraza, amoblado, con vista directa a la bahía de Valparaíso. Edificio Horizonte Barón (2019), con piscina panorámica y seguridad 24h. Bodega y estacionamiento. No paga contribuciones.",
+      "url": "https://horizonte-baron-landing.vercel.app/",
+      "image": [
+        "https://horizonte-baron-landing.vercel.app/img/atardecer-og.jpg",
+        "https://horizonte-baron-landing.vercel.app/img/living-mar.jpg"
+      ],
+      "numberOfRooms": 2,
+      "numberOfBedrooms": 2,
+      "numberOfBathroomsTotal": 1,
+      "floorSize": { "@type": "QuantitativeValue", "value": 53, "unitCode": "MTK" },
+      "yearBuilt": "2019",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Cerro Barón",
+        "addressLocality": "Valparaíso",
+        "addressRegion": "Región de Valparaíso",
+        "addressCountry": "CL"
+      },
+      "geo": { "@type": "GeoCoordinates", "latitude": -33.0406212, "longitude": -71.5985901 },
+      "amenityFeature": [
+        { "@type": "LocationFeatureSpecification", "name": "Vista al mar", "value": true },
+        { "@type": "LocationFeatureSpecification", "name": "Amoblado", "value": true },
+        { "@type": "LocationFeatureSpecification", "name": "Terraza", "value": true },
+        { "@type": "LocationFeatureSpecification", "name": "Piscina panorámica", "value": true },
+        { "@type": "LocationFeatureSpecification", "name": "Estacionamiento", "value": true },
+        { "@type": "LocationFeatureSpecification", "name": "Bodega", "value": true },
+        { "@type": "LocationFeatureSpecification", "name": "Seguridad 24h", "value": true }
+      ]
+    },
+    {
+      "@type": "Offer",
+      "itemOffered": { "@id": "https://horizonte-baron-landing.vercel.app/#departamento" },
+      "priceCurrency": "CLP",
+      "price": "155040000",
+      "availability": "https://schema.org/InStock",
+      "url": "https://horizonte-baron-landing.vercel.app/",
+      "priceValidUntil": "2027-12-31"
+    }
+  ]
+}
+</script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
