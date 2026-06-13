@@ -364,7 +364,7 @@ footer b{color:var(--on-dark); font-family:var(--display)}
 <!-- ===================== HERO ===================== -->
 <section class="hero" id="inicio">
   <div class="hero__media">
-    <video id="heroVideo" autoplay muted loop playsinline preload="metadata"
+    <video id="heroVideo" autoplay muted loop playsinline preload="auto"
            poster="img/hero-atardecer-poster.jpg" aria-hidden="true">
       <source src="img/hero-atardecer.mp4" type="video/mp4" />
     </video>
@@ -817,9 +817,19 @@ if('IntersectionObserver' in window){
   reveals.forEach(r=>r.classList.add('in'));
 }
 
-/* ---------- Reduced motion: pausar video hero ---------- */
-if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
-  document.querySelectorAll('video').forEach(v=>{ v.removeAttribute('autoplay'); v.pause(); });
+/* ---------- Autoplay robusto de los videos (respeta reduced-motion) ---------- */
+const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const bgVideos = document.querySelectorAll('video[autoplay]');
+if(prefersReduced){
+  bgVideos.forEach(v=>{ v.removeAttribute('autoplay'); v.pause(); });
+}else{
+  const tryPlay = (v)=>{ try{ v.muted=true; v.playsInline=true; const p=v.play(); if(p&&p.catch) p.catch(()=>{}); }catch(_){} };
+  bgVideos.forEach(tryPlay);
+  // Reintenta al primer gesto del usuario (si el navegador bloqueó el autoplay, ej. ahorro de batería)
+  const kick=()=>{ bgVideos.forEach(v=>{ if(v.paused) tryPlay(v); }); ['pointerdown','touchstart','scroll'].forEach(ev=>window.removeEventListener(ev,kick)); };
+  ['pointerdown','touchstart','scroll'].forEach(ev=>window.addEventListener(ev,kick,{once:true,passive:true}));
+  // Reintenta al volver a la pestaña
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) bgVideos.forEach(v=>{ if(v.paused) tryPlay(v); }); });
 }
 
 /* ---------- Lightbox galería ---------- */
@@ -876,26 +886,28 @@ form.querySelectorAll('[data-next]').forEach(b=>b.addEventListener('click',()=>{
 form.querySelectorAll('[data-back]').forEach(b=>b.addEventListener('click',()=>{ cur--; show(cur); }));
 function shake(el){ el.animate([{transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(0)'}],{duration:260}); }
 
-form.addEventListener('submit', async (e)=>{
+form.addEventListener('submit', (e)=>{
   e.preventDefault();
   if(!stepValid(2)) return;
   const data=Object.fromEntries(new FormData(form).entries());
-  const resumen=`Lead Cerro Barón%0A%0A*Objetivo:* ${data.objetivo||'-'}%0A*Pago:* ${data.pago||'-'}%0A*Nombre:* ${data.nombre}%0A*WhatsApp:* ${data.fono}%0A*Email:* ${data.email}`;
-  // 1) Enviar a correo vía Web3Forms (si hay key)
+  // Mensaje de WhatsApp con todo el contexto del lead (codificado correctamente)
+  const waText=`Hola, soy ${data.nombre}. Vi el departamento de Cerro Barón (UF 3.800).\n\nObjetivo: ${data.objetivo}\nForma de pago: ${data.pago}\nQuiero coordinar una visita.`;
+  const waUrl=`https://wa.me/${CONFIG.whatsappNumber}?text=${encodeURIComponent(waText)}`;
+  document.getElementById('waSuccess').href=waUrl;
+  // 1) Abrir WhatsApp DENTRO del gesto del usuario (antes de cualquier await; así el navegador no lo bloquea)
+  const waWin=window.open(waUrl,'_blank');
+  // 2) Enviar el lead al correo en segundo plano (no bloquea la apertura de WhatsApp)
   if(CONFIG.web3formsKey){
-    try{
-      await fetch('https://api.web3forms.com/submit',{
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({access_key:CONFIG.web3formsKey, subject:'Nuevo lead · Depto Cerro Barón',
-          objetivo:data.objetivo, pago:data.pago, nombre:data.nombre, whatsapp:data.fono, email:data.email})
-      });
-    }catch(err){ /* no bloquea la conversión */ }
+    fetch('https://api.web3forms.com/submit',{
+      method:'POST', keepalive:true, headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({access_key:CONFIG.web3formsKey, subject:'Nuevo lead · Depto Cerro Barón',
+        objetivo:data.objetivo, pago:data.pago, nombre:data.nombre, whatsapp:data.fono, email:data.email})
+    }).catch(()=>{});
   }
-  // 2) Preparar WhatsApp con todo el contexto del lead
-  const waMsg=`Hola, soy ${data.nombre}. Vi el departamento de Cerro Barón (UF 3.800).%0A%0AObjetivo: ${data.objetivo}%0AForma de pago: ${data.pago}%0AQuiero coordinar una visita.`;
-  document.getElementById('waSuccess').href=`https://wa.me/${CONFIG.whatsappNumber}?text=${waMsg}`;
-  // 3) Mostrar éxito
+  // 3) Mostrar paso de éxito (incluye botón de respaldo "Abrir WhatsApp")
   cur=steps.findIndex(s=>s.dataset.step==='ok'); show(cur);
+  // 4) Respaldo: si el navegador bloqueó la ventana emergente, redirige a WhatsApp
+  if(!waWin || waWin.closed || typeof waWin.closed==='undefined'){ setTimeout(()=>{ location.href=waUrl; }, 500); }
 });
 </script>
 </body>
